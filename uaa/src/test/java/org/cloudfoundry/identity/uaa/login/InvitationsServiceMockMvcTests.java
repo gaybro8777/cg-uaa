@@ -445,39 +445,6 @@ public class InvitationsServiceMockMvcTests extends InjectedMockContextTest {
             );
     }
 
-    protected void mockSamlAuthentication(IdentityZoneCreationResult zone, String originKey, String entityID, final String invitedEmail, final String authenticatedEmail) {
-        try {
-            //perform SAML Login
-            //setup the existing token
-            IdentityZoneHolder.set(zone.getIdentityZone());
-            UaaPrincipal invited = new UaaPrincipal(getWebApplicationContext().getBean(UaaUserDatabase.class).retrieveUserByName(invitedEmail, originKey));
-            UaaAuthentication invitedAuthentication = new UaaAuthentication(invited, Arrays.asList(UaaAuthority.UAA_INVITED), mock(UaaAuthenticationDetails.class));
-
-            ExtendedMetadata metadata = mock(ExtendedMetadata.class);
-            when(metadata.getAlias()).thenReturn(originKey);
-            SAMLMessageContext contxt = mock(SAMLMessageContext.class);
-            when(contxt.getPeerExtendedMetadata()).thenReturn(metadata);
-            when(contxt.getCommunicationProfileId()).thenReturn(SAMLConstants.SAML2_WEBSSO_PROFILE_URI);
-            SAMLAuthenticationToken token = new SAMLAuthenticationToken(contxt);
-
-            SecurityContextHolder.getContext().setAuthentication(invitedAuthentication);
-            LoginSamlAuthenticationProvider authprovider = new LoginSamlAuthenticationProvider() {
-                @Override
-                protected ExpiringUsernameAuthenticationToken getExpiringUsernameAuthenticationToken(Authentication authentication) {
-                    return new ExpiringUsernameAuthenticationToken(authenticatedEmail, "");
-                }
-            };
-            authprovider.setUserDatabase(getWebApplicationContext().getBean(UaaUserDatabase.class));
-            authprovider.setIdentityProviderProvisioning(getWebApplicationContext().getBean(IdentityProviderProvisioning.class));
-            authprovider.setApplicationEventPublisher(getWebApplicationContext().getBean(LoginSamlAuthenticationProvider.class).getApplicationEventPublisher());
-
-            authprovider.authenticate(token);
-        } finally {
-            IdentityZoneHolder.clear();
-            SecurityContextHolder.clearContext();
-        }
-    }
-
     public MimeMessageWrapper inviteUser(String email, String userInviteToken, String subdomain, String clientId, String expectedOrigin) throws Exception {
         InvitationsEndpointMockMvcTests.sendRequestWithToken(userInviteToken, subdomain, clientId, REDIRECT_URI, email);
         assertEquals(expectedOrigin, getWebApplicationContext().getBean(JdbcTemplate.class).queryForObject("SELECT origin FROM users WHERE username='" + email + "'", String.class));
