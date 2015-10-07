@@ -35,6 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -48,6 +50,28 @@ public class AccountsController {
         this.accountCreationService = accountCreationService;
     }
 
+    public boolean isEmailAddressAlphaUser(String email) {
+        List<String> whitelistedEmails = new ArrayList<String>();
+        whitelistedEmails.add("j@j.com");
+        for (String whitelistedEmail: whitelistedEmails) {
+            if (email.equals(whitelistedEmail)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isEmailAddressDomainWhiteListedForAlphaPhase(String email) {
+        String domain = email.substring(email.lastIndexOf('@') + 1);
+        List<String> whitelistedEmailDomains = new ArrayList<String>();
+        whitelistedEmailDomains.add("gsa.gov");
+        for (String whitelistedEmailDomain: whitelistedEmailDomains) {
+            if (domain.equals(whitelistedEmailDomain)) {
+                return true;
+            }
+        }
+        return false;
+    }
     @RequestMapping(value = "/create_account", method = GET)
     public String activationEmail(Model model,
                                   @RequestParam(value = "client_id", required = false) String clientId,
@@ -66,6 +90,9 @@ public class AccountsController {
                                       @RequestParam("password_confirmation") String passwordConfirmation) {
         if(result.hasErrors()) {
             return handleUnprocessableEntity(model, response, "error_message_code", "invalid_email");
+        }
+        if (!isEmailAddressDomainWhiteListedForAlphaPhase(email.getEmail()) && !isEmailAddressAlphaUser(email.getEmail())) {
+            return handleUnprocessableEntity(model, response, "error_message_code", "non_alpha_user");
         }
         PasswordConfirmationValidation validation = new PasswordConfirmationValidation(password, passwordConfirmation);
         if (!validation.valid()) {
