@@ -12,6 +12,7 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.login;
 
+import org.cloudfoundry.identity.uaa.config.PasswordPolicy;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.scim.exception.InvalidPasswordException;
 
@@ -21,4 +22,6 @@ public interface ResetPasswordService {
     ForgotPasswordInfo forgotPassword(String email);
 
     ScimUser resetPassword(String code, String password) throws InvalidPasswordException;
+
+    PasswordPolicy getPasswordPolicy();
 }
