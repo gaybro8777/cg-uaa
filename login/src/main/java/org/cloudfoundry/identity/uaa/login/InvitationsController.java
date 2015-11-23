@@ -216,6 +216,7 @@ public class InvitationsController {
                     logger.debug(String.format("Sending user to accept invitation page email:%s, id:%s", codeData.get("email"), codeData.get("user_id")));
                 }
             }
+            model.addAttribute("passwordPolicy", passwordValidator.getPasswordPolicy());
             model.addAllAttributes(codeData);
             return "invitations/accept_invite";
         } catch (CodeNotFoundException e) {
