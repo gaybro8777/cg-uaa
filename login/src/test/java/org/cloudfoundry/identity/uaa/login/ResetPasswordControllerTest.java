@@ -86,7 +86,7 @@ public class ResetPasswordControllerTest extends TestClassNullifier {
         resetPasswordService = mock(ResetPasswordService.class);
         messageService = mock(MessageService.class);
         codeStore = mock(ExpiringCodeStore.class);
-        ResetPasswordController controller = new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "pivotal", codeStore);
+        ResetPasswordController controller = new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "pivotal", null, codeStore);
 
         InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
         viewResolver.setPrefix("/WEB-INF/jsp");
@@ -114,8 +114,40 @@ public class ResetPasswordControllerTest extends TestClassNullifier {
             .andExpect(model().attribute("redirect_uri", "http://example.com"));
     }
 
+    private void overrideController(ResetPasswordController controller) {
+        mockMvc = null;
+        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+        viewResolver.setPrefix("/WEB-INF/jsp");
+        viewResolver.setSuffix(".jsp");
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(controller)
+                .setViewResolvers(viewResolver)
+                .build();
+    }
+
     @Test
     public void forgotPassword_Conflict_SendsEmailWithUnavailableEmailHtml() throws Exception {
+        forgotPasswordWithConflict(null, "Pivotal");
+    }
+
+    @Test
+    public void forgotPassword_Conflict_SendsEmailWithUnavailableEmailHtmlWithOss() throws Exception {
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "oss", null, codeStore));
+        forgotPasswordWithConflict(null, "Cloud Foundry");
+    }
+
+    @Test
+    public void forgotPassword_Conflict_SendsEmailWithUnavailableEmailHtmlWithOssBrandWithBrandTitle() throws Exception {
+        String brandTitle = "Custom Brand";
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "oss", brandTitle, codeStore));
+        forgotPasswordWithConflict(null, brandTitle);
+    }
+
+    @Test
+    public void forgotPassword_Conflict_SendsEmailWithUnavailableEmailHtmlWithPivotalBrandWithBrandTitle() throws Exception {
+        String brandTitle = "Custom Brand";
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "pivotal", brandTitle, codeStore));
+        // Should stay 'Pivotal'
         forgotPasswordWithConflict(null, "Pivotal");
     }
 
@@ -174,6 +206,27 @@ public class ResetPasswordControllerTest extends TestClassNullifier {
 
     @Test
     public void forgotPassword_Successful() throws Exception {
+        forgotPasswordSuccessful("http://localhost/reset_password?code=code1&amp;email=user%40example.com", "Pivotal", null);
+    }
+
+    @Test
+    public void forgotPassword_SuccessfulWithOssBrand() throws Exception {
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "oss", null, codeStore));
+        forgotPasswordSuccessful("http://localhost/reset_password?code=code1&amp;email=user%40example.com", "Cloud Foundry", null);
+    }
+
+    @Test
+    public void forgotPassword_SuccessfulWithOssBrandWithBrandTitle() throws Exception {
+        String brandTitle = "Custom Brand";
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "oss", brandTitle, codeStore));
+        forgotPasswordSuccessful("http://localhost/reset_password?code=code1&amp;email=user%40example.com", brandTitle, null);
+    }
+
+    @Test
+    public void forgotPassword_SuccessfulWithPivotalBrandWithBrandTitle() throws Exception {
+        String brandTitle = "Custom Brand";
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "pivotal", brandTitle, codeStore));
+        // Should stay 'Pivotal'
         forgotPasswordSuccessful("http://localhost/reset_password?code=code1&amp;email=user%40example.com", "Pivotal", null);
     }
 

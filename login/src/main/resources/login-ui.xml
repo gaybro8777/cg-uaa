@@ -516,6 +516,7 @@
         <constructor-arg index="0" ref="#{T(org.springframework.util.StringUtils).hasText('${smtp.host:}') ? 'smtpJavaMailSender' : 'fakeJavaMailSender'}"/>
         <constructor-arg index="1" value="${login.url:http://localhost:8080/uaa}"/>
         <constructor-arg index="2" value="${login.brand:oss}"/>
+        <constructor-arg index="3" value="${login.brand_title:#{null}}"/>
     </bean>
 
     <bean id="smtpJavaMailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
@@ -543,6 +544,7 @@
         <constructor-arg ref="uaaPasswordValidator"/>
         <constructor-arg ref="uaaUrlUtils" />
         <constructor-arg value="${login.brand:oss}"/>
+        <constructor-arg value="${login.brand_title:#{null}}"/>
     </bean>
 
     <bean id="uaaPasswordValidator" class="org.cloudfoundry.identity.uaa.scim.validate.UaaPasswordPolicyValidator">
@@ -554,6 +556,7 @@
         <constructor-arg ref="mailTemplateEngine"/>
         <constructor-arg ref="messageService"/>
         <constructor-arg value="${login.brand:oss}"/>
+        <constructor-arg value="${login.brand_title:#{null}}"/>
     </bean>
 
     <bean id="changePasswordService" class="org.cloudfoundry.identity.uaa.login.UaaChangePasswordService">
@@ -582,7 +585,8 @@
         <constructor-arg ref="jdbcClientDetailsService"/>
         <constructor-arg ref="scimUserProvisioning"/>
         <constructor-arg ref="codeStore"/>
-        <constructor-arg value="${login.brand:oss}"/>
+        <constructor-arg index="4" value="${login.brand:oss}"/>
+        <constructor-arg index="5" value="${login.brand_title:#{null}}"/>
     </bean>
 
     <bean id="resetPasswordController" class="org.cloudfoundry.identity.uaa.login.ResetPasswordController">
@@ -591,6 +595,7 @@
         <constructor-arg ref="mailTemplateEngine"/>
         <constructor-arg ref="uaaUrlUtils"/>
         <constructor-arg value="${login.brand:oss}"/>
+        <constructor-arg value="${login.brand_title:#{null}}"/>
         <constructor-arg ref="codeStore"/>
     </bean>
 
