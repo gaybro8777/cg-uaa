@@ -42,11 +42,13 @@ public class EmailInvitationsService implements InvitationsService {
     @Autowired
     private ScimUserProvisioning scimUserProvisioning;
     private String brand;
+    private String ossBrandTitle;
 
-    public EmailInvitationsService(SpringTemplateEngine templateEngine, MessageService messageService, String brand) {
+    public EmailInvitationsService(SpringTemplateEngine templateEngine, MessageService messageService, String brand, String ossBrandTitle) {
         this.templateEngine = templateEngine;
         this.messageService = messageService;
         this.brand = brand;
+        this.ossBrandTitle = ossBrandTitle;
     }
 
     public void setBrand(String brand) {
@@ -73,13 +75,14 @@ public class EmailInvitationsService implements InvitationsService {
     }
 
     private String getSubjectText() {
-        return brand.equals("pivotal") ? "Invitation to join Pivotal" : "Invitation to join cloud.gov";
+        return brand.equals("pivotal") ? "Invitation to join Pivotal" :
+                    "Invitation to join " + ((ossBrandTitle == null) ? "Cloud Foundry" : ossBrandTitle);
     }
 
     private String getEmailHtml(String currentUser, String code) {
         String accountsUrl = ServletUriComponentsBuilder.fromCurrentContextPath().path("/invitations/accept").build().toUriString();
         final Context ctx = new Context();
-        ctx.setVariable("serviceName", brand.equals("pivotal") ? "Pivotal" : "cloud.gov");
+        ctx.setVariable("serviceName", brand.equals("pivotal") ? "Pivotal" : ((ossBrandTitle == null) ? "Cloud Foundry" : ossBrandTitle));
         ctx.setVariable("code", code);
         ctx.setVariable("currentUser", currentUser);
         ctx.setVariable("accountsUrl", accountsUrl);
