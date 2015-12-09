@@ -215,6 +215,74 @@ public class EmailInvitationsServiceTests {
     }
 
     @Test
+    public void testSendInviteEmailWithOSSBrandWithBrandTitle() throws Exception {
+        emailInvitationsService.setBrand("oss");
+        String brandTitle = "Custom Brand";
+        emailInvitationsService.setBrandTitle(brandTitle);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setProtocol("http");
+        request.setContextPath("/login");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        ArgumentCaptor<Map<String,String>> captor = ArgumentCaptor.forClass((Class) Map.class);
+
+        when(expiringCodeService.generateCode(captor.capture(), anyInt(), eq(TimeUnit.DAYS))).thenReturn("the_secret_code");
+        emailInvitationsService.inviteUser("user@example.com", "current-user", "", "");
+
+        Map<String,String> data = captor.getValue();
+        assertEquals("existing-user-id", data.get("user_id"));
+
+        ArgumentCaptor<String> emailBodyArgument = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(messageService).sendMessage(
+                eq("user@example.com"),
+                eq(MessageType.INVITATION),
+                eq("Invitation to join " + brandTitle),
+                emailBodyArgument.capture()
+        );
+        String emailBody = emailBodyArgument.getValue();
+        assertThat(emailBody, containsString("current-user"));
+        assertThat(emailBody, containsString("<a href=\"http://localhost/login/invitations/accept?code=the_secret_code\">Accept Invite</a>"));
+        assertThat(emailBody, containsString(brandTitle));
+        assertThat(emailBody, not(containsString("Cloud Foundry")));
+        assertThat(emailBody, not(containsString("Pivotal")));
+    }
+
+    @Test
+    public void testSendInviteEmailWithPivotalBrandWithBrandTitle() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setProtocol("http");
+        request.setContextPath("/login");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        ArgumentCaptor<Map<String,String>> captor = ArgumentCaptor.forClass((Class)Map.class);
+
+        when(expiringCodeService.generateCode(captor.capture(), anyInt(), eq(TimeUnit.DAYS))).thenReturn("the_secret_code");
+        String brandTile = "Custom Brand";
+        emailInvitationsService.setBrandTitle(brandTile);
+        emailInvitationsService.inviteUser("user@example.com", "current-user", "client-id", "blah.example.com");
+
+        Map<String,String> data = captor.getValue();
+        assertEquals("existing-user-id", data.get("user_id"));
+        assertEquals("client-id", data.get("client_id"));
+        assertEquals("blah.example.com", data.get("redirect_uri"));
+
+        ArgumentCaptor<String> emailBodyArgument = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(messageService).sendMessage(
+                eq("user@example.com"),
+                eq(MessageType.INVITATION),
+                eq("Invitation to join Pivotal"),
+                emailBodyArgument.capture()
+        );
+        String emailBody = emailBodyArgument.getValue();
+        assertThat(emailBody, containsString("current-user"));
+        assertThat(emailBody, containsString("Pivotal"));
+        assertThat(emailBody, containsString("<a href=\"http://localhost/login/invitations/accept?code=the_secret_code\">Accept Invite</a>"));
+        assertThat(emailBody, not(containsString("Cloud Foundry")));
+        // Should keep Pivotal there.
+        assertThat(emailBody, not(containsString(brandTile)));
+    }
+
+    @Test
     public void acceptInvitationNoClientId() throws Exception {
         ScimUser user = new ScimUser("user-id-001", "user@example.com", "first", "last");
         when(scimUserProvisioning.retrieve(eq("user-id-001"))).thenReturn(user);
@@ -307,7 +375,7 @@ public class EmailInvitationsServiceTests {
 
         @Bean
         EmailInvitationsService emailInvitationsService() {
-            return new EmailInvitationsService(templateEngine, messageService(), "pivotal");
+            return new EmailInvitationsService(templateEngine, messageService(), "pivotal", null);
         }
 
         @Bean

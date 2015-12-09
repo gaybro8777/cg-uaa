@@ -43,7 +43,7 @@ public class EmailChangeEmailService implements ChangeEmailService {
     private final TemplateEngine templateEngine;
     private final MessageService messageService;
     private final String brand;
-    private final String ossBrandTitle;
+    private final String brandTitle;
     private final ScimUserProvisioning scimUserProvisioning;
     private final ExpiringCodeStore codeStore;
     private final ClientDetailsService clientDetailsService;
@@ -51,13 +51,13 @@ public class EmailChangeEmailService implements ChangeEmailService {
     public static final String CHANGE_EMAIL_REDIRECT_URL = "change_email_redirect_url";
     private final UaaUrlUtils uaaUrlUtils;
 
-    public EmailChangeEmailService(TemplateEngine templateEngine, MessageService messageService, ScimUserProvisioning scimUserProvisioning, UaaUrlUtils uaaUrlUtils, String brand, String ossBrandTitle, ExpiringCodeStore codeStore, ClientDetailsService clientDetailsService) {
+    public EmailChangeEmailService(TemplateEngine templateEngine, MessageService messageService, ScimUserProvisioning scimUserProvisioning, UaaUrlUtils uaaUrlUtils, String brand, String brandTitle, ExpiringCodeStore codeStore, ClientDetailsService clientDetailsService) {
         this.templateEngine = templateEngine;
         this.messageService = messageService;
         this.scimUserProvisioning = scimUserProvisioning;
         this.uaaUrlUtils = uaaUrlUtils;
         this.brand = brand;
-        this.ossBrandTitle = ossBrandTitle; //
+        this.brandTitle = brandTitle;
         this.codeStore = codeStore;
         this.clientDetailsService = clientDetailsService;
     }
@@ -152,7 +152,7 @@ public class EmailChangeEmailService implements ChangeEmailService {
 
         final Context ctx = new Context();
         if (IdentityZoneHolder.get().equals(IdentityZone.getUaa())) {
-            ctx.setVariable("serviceName", brand.equals("pivotal") ? "Pivotal " : ((ossBrandTitle == null) ? "Cloud Foundry" : ossBrandTitle));
+            ctx.setVariable("serviceName", brand.equals("pivotal") ? "Pivotal " : ((brandTitle == null) ? "Cloud Foundry" : brandTitle));
             ctx.setVariable("servicePhrase", brand.equals("pivotal") ? "a Pivotal ID" : "an account");
         }
         else {
