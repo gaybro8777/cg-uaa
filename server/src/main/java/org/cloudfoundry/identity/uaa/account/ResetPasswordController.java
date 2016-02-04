@@ -47,6 +47,7 @@ import org.thymeleaf.context.Context;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.lang.String;
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -62,6 +63,7 @@ public class ResetPasswordController {
     private final TemplateEngine templateEngine;
     private final UaaUrlUtils uaaUrlUtils;
     private final String brand;
+    private final String brandTitle;
     private final Pattern emailPattern;
     private final ExpiringCodeStore codeStore;
     private final UaaUserDatabase userDatabase;
@@ -71,6 +73,7 @@ public class ResetPasswordController {
                                    TemplateEngine templateEngine,
                                    UaaUrlUtils uaaUrlUtils,
                                    String brand,
+                                   String brandTitle,
                                    ExpiringCodeStore codeStore,
                                    UaaUserDatabase userDatabase) {
         this.resetPasswordService = resetPasswordService;
@@ -78,6 +81,7 @@ public class ResetPasswordController {
         this.templateEngine = templateEngine;
         this.uaaUrlUtils = uaaUrlUtils;
         this.brand = brand;
+        this.brandTitle = brandTitle;
         emailPattern = Pattern.compile("^\\S+@\\S+\\.\\S+$");
         this.codeStore = codeStore;
         this.userDatabase = userDatabase;
@@ -155,7 +159,7 @@ public class ResetPasswordController {
 
     private String getServiceName() {
         if (IdentityZoneHolder.get().equals(IdentityZone.getUaa())) {
-            return brand.equals("pivotal") ? "Pivotal" : "";
+            return brand.equals("pivotal") ? "Pivotal" : ((brandTitle == null) ? "Cloud Foundry" : brandTitle);
         } else {
             return IdentityZoneHolder.get().getName();
         }

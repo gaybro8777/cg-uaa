@@ -98,7 +98,7 @@ public class ResetPasswordControllerTest extends TestClassNullifier {
         codeStore = mock(ExpiringCodeStore.class);
         userDatabase = mock(UaaUserDatabase.class);
         when(userDatabase.retrieveUserById(anyString())).thenReturn(new UaaUser("username","password","email","givenname","familyname"));
-        ResetPasswordController controller = new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "pivotal", codeStore, userDatabase);
+        ResetPasswordController controller = new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "pivotal", null, codeStore, userDatabase);
 
         InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
         viewResolver.setPrefix("/WEB-INF/jsp");
@@ -348,5 +348,58 @@ public class ResetPasswordControllerTest extends TestClassNullifier {
             .andExpect(status().isUnprocessableEntity())
             .andExpect(view().name("forgot_password"))
             .andExpect(model().attribute("message", "Your new password cannot be the same as the old password."));
+    }
+
+    @Test
+    public void forgotPassword_Conflict_SendsEmailWithUnavailableEmailHtmlWithOss() throws Exception {
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "oss", null, codeStore, userDatabase));
+        forgotPasswordWithConflict(null, "Cloud Foundry");
+    }
+
+    @Test
+    public void forgotPassword_Conflict_SendsEmailWithUnavailableEmailHtmlWithOssBrandWithBrandTitle() throws Exception {
+        String brandTitle = "Custom Brand";
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "oss", brandTitle, codeStore, userDatabase));
+        forgotPasswordWithConflict(null, brandTitle);
+    }
+
+    @Test
+    public void forgotPassword_Conflict_SendsEmailWithUnavailableEmailHtmlWithPivotalBrandWithBrandTitle() throws Exception {
+        String brandTitle = "Custom Brand";
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "pivotal", brandTitle, codeStore, userDatabase));
+        // Should stay 'Pivotal'
+        forgotPasswordWithConflict(null, "Pivotal");
+    }
+
+    @Test
+    public void forgotPassword_SuccessfulWithOssBrand() throws Exception {
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "oss", null, codeStore, userDatabase));
+        forgotPasswordSuccessful("http://localhost/reset_password?code=code1&amp;email=user%40example.com", "Cloud Foundry", null);
+    }
+
+    @Test
+    public void forgotPassword_SuccessfulWithOssBrandWithBrandTitle() throws Exception {
+        String brandTitle = "Custom Brand";
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "oss", brandTitle, codeStore, userDatabase));
+        forgotPasswordSuccessful("http://localhost/reset_password?code=code1&amp;email=user%40example.com", brandTitle, null);
+    }
+
+    @Test
+    public void forgotPassword_SuccessfulWithPivotalBrandWithBrandTitle() throws Exception {
+        String brandTitle = "Custom Brand";
+        overrideController(new ResetPasswordController(resetPasswordService, messageService, templateEngine, new UaaUrlUtils(), "pivotal", brandTitle, codeStore, userDatabase));
+        // Should stay 'Pivotal'
+        forgotPasswordSuccessful("http://localhost/reset_password?code=code1&amp;email=user%40example.com", "Pivotal", null);
+    }
+
+    private void overrideController(ResetPasswordController controller) {
+        mockMvc = null;
+        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+        viewResolver.setPrefix("/WEB-INF/jsp");
+        viewResolver.setSuffix(".jsp");
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(controller)
+                .setViewResolvers(viewResolver)
+                .build();
     }
 }
