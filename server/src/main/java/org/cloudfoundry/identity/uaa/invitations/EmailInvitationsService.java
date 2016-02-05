@@ -25,10 +25,13 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring4.SpringTemplateEngine;
 
 import javax.swing.*;
+import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.cloudfoundry.identity.uaa.constants.OriginKeys.ORIGIN;
 import static org.springframework.security.oauth2.common.util.OAuth2Utils.CLIENT_ID;
 import static org.springframework.security.oauth2.common.util.OAuth2Utils.REDIRECT_URI;
 
@@ -92,6 +95,20 @@ public class EmailInvitationsService implements InvitationsService {
         ctx.setVariable("currentUser", currentUser);
         ctx.setVariable("accountsUrl", accountsUrl);
         return templateEngine.process("invite", ctx);
+    }
+
+    @Override
+    public void inviteUser(ScimUser user, String currentUser, String clientId, String redirectUri) {
+        String email = user.getPrimaryEmail();
+        Map<String,String> data = new HashMap<>();
+        data.put(USER_ID, user.getId());
+        data.put(EMAIL, email);
+        data.put(CLIENT_ID, clientId);
+        data.put(REDIRECT_URI, redirectUri);
+        data.put(ORIGIN, user.getOrigin());
+        Timestamp expiry = new Timestamp(System.currentTimeMillis()+ (INVITATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000));
+        ExpiringCode code = expiringCodeStore.generateCode(JsonUtils.writeValueAsString(data), expiry, null);
+        sendInvitationEmail(email, currentUser, code.getCode());
     }
 
     @Override
