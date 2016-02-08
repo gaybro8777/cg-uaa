@@ -94,6 +94,13 @@ public class EmailInvitationsService implements InvitationsService {
         ctx.setVariable("code", code);
         ctx.setVariable("currentUser", currentUser);
         ctx.setVariable("accountsUrl", accountsUrl);
+        ctx.setVariable("serviceUrl", "https://cloud.gov");
+        ctx.setVariable("serviceOrg", "18F");
+        ctx.setVariable("serviceOrgDashboardUrl", "https://18f.gsa.gov/dashboard/");
+        ctx.setVariable("serviceDocs", "https://docs.cloud.gov");
+        ctx.setVariable("serviceSetupDoc", "https://docs.cloud.gov/getting-started/setup/");
+        ctx.setVariable("serviceExamples", "https://github.com/18F/cf-hello-worlds");
+        ctx.setVariable("serviceSupportEmail", "mailto:cloud-gov-support@gsa.gov");
         return templateEngine.process("invite", ctx);
     }
 
