@@ -47,8 +47,8 @@ public class EmailService implements MessageService {
             name = IdentityZoneHolder.get().getName();
         }
         String email = "admin@" + host;
-        if (brandTitle != null && brandTitle.toLowerCase().equals("cloud.gov")) {
-            email = "cloud-gov-support@gsa.gov";
+        if (brandTitle != null && brandTitle.toLowerCase().contains("cloud.gov")) {
+            email = "no-reply@cloud.gov";
         }
         return new Address[]{new InternetAddress(email, name)};
     }
