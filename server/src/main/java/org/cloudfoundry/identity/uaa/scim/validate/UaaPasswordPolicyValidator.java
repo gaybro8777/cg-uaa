@@ -49,7 +49,7 @@ public class UaaPasswordPolicyValidator implements PasswordValidator {
         IdentityProvider<UaaIdentityProviderDefinition> idp = provisioning.retrieveByOrigin(OriginKeys.UAA, IdentityZoneHolder.get().getId());
         if (idp==null) {
             //should never happen
-            return;
+            return null;
         }
 
         PasswordPolicy policy = globalDefaultPolicy;

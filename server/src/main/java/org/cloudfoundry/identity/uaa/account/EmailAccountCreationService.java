@@ -171,7 +171,6 @@ public class EmailAccountCreationService implements AccountCreationService {
         return passwordValidator.getPasswordPolicy();
     }
 
-
     private String getSubjectText() {
         return StringUtils.hasText(IdentityZoneHolder.resolveBranding().getCompanyName()) && IdentityZoneHolder.isUaa() ?  "Activate your " + IdentityZoneHolder.resolveBranding().getCompanyName() + " account" : "Activate your account";
     }
