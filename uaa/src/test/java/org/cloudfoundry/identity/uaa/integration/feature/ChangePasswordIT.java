@@ -90,13 +90,12 @@ public class ChangePasswordIT {
 
     @Test
     public void testChangePassword() throws Exception {
-        webDriver.get(baseUrl + "/change_password");
         signIn(userEmail, PASSWORD);
 
         changePassword(PASSWORD, NEW_PASSWORD, "new");
-        WebElement errorMessage = webDriver.findElement(By.className("error-message"));
+        WebElement errorMessage = webDriver.findElement(By.id("match-passwords"));
         assertTrue(errorMessage.isDisplayed());
-        assertEquals("Passwords must match and not be empty.", errorMessage.getText());
+        assertEquals("DO NOT", errorMessage.getText());
 
         changePassword(PASSWORD, NEW_PASSWORD, NEW_PASSWORD);
         signOut();
@@ -109,7 +108,7 @@ public class ChangePasswordIT {
         //the only policy we can contravene by default is the length
 
         String newPassword = new RandomValueStringGenerator(260).generate();
-        webDriver.get(baseUrl + "/change_password");
+
         signIn(userEmail, PASSWORD);
 
         changePassword(PASSWORD, newPassword, newPassword);
@@ -135,8 +134,11 @@ public class ChangePasswordIT {
     }
 
     private void signIn(String userName, String password) {
+        webDriver.get(baseUrl + "/logout.do");
+        webDriver.get(baseUrl + "/login");
         webDriver.findElement(By.name("username")).sendKeys(userName);
         webDriver.findElement(By.name("password")).sendKeys(password);
         webDriver.findElement(By.xpath("//input[@value='Sign in']")).click();
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), containsString("Where to?"));
     }
 }

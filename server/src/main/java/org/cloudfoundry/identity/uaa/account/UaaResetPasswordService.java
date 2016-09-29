@@ -12,6 +12,7 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.account;
 
+import org.cloudfoundry.identity.uaa.provider.PasswordPolicy;
 import org.cloudfoundry.identity.uaa.account.event.PasswordChangeEvent;
 import org.cloudfoundry.identity.uaa.account.event.PasswordChangeFailureEvent;
 import org.cloudfoundry.identity.uaa.account.event.ResetPasswordRequestEvent;
@@ -49,7 +50,6 @@ import static org.springframework.util.StringUtils.isEmpty;
 public class UaaResetPasswordService implements ResetPasswordService, ApplicationEventPublisherAware {
 
     public static final int PASSWORD_RESET_LIFETIME = 30 * 60 * 1000;
-    public static final String FORGOT_PASSWORD_INTENT_PREFIX = "forgot_password_for_id:";
 
     private final ScimUserProvisioning scimUserProvisioning;
     private final ExpiringCodeStore expiringCodeStore;
@@ -80,22 +80,20 @@ public class UaaResetPasswordService implements ResetPasswordService, Applicatio
             throw new InvalidCodeException("invalid_code", "Sorry, your reset password link is no longer valid. Please request a new one", 422);
         }
         String userId;
-        String userName;
-        Date passwordLastModified;
-        String clientId;
-        String redirectUri;
-        PasswordChange change;
+        String userName = null;
+        Date passwordLastModified = null;
+        String clientId = null;
+        String redirectUri = null;
         try {
-            change = JsonUtils.readValue(expiringCode.getData(), PasswordChange.class);
+            PasswordChange change = JsonUtils.readValue(expiringCode.getData(), PasswordChange.class);
+            userId = change.getUserId();
+            userName = change.getUsername();
+            passwordLastModified = change.getPasswordModifiedTime();
+            clientId = change.getClientId();
+            redirectUri = change.getRedirectUri();
         } catch (JsonUtils.JsonUtilException x) {
-            throw new InvalidCodeException("invalid_code", "Sorry, your reset password link is no longer valid. Please request a new one", 422);
+            userId = expiringCode.getData();
         }
-        userId = change.getUserId();
-        userName = change.getUsername();
-        passwordLastModified = change.getPasswordModifiedTime();
-        clientId = change.getClientId();
-        redirectUri = change.getRedirectUri();
-
         ScimUser user = scimUserProvisioning.retrieve(userId);
         try {
             if (isUserModified(user, expiringCode.getExpiresAt(), userName, passwordLastModified)) {
@@ -144,9 +142,7 @@ public class UaaResetPasswordService implements ResetPasswordService, Applicatio
         ScimUser scimUser = results.get(0);
 
         PasswordChange change = new PasswordChange(scimUser.getId(), scimUser.getUserName(), scimUser.getPasswordLastModified(), clientId, redirectUri);
-        String intent = FORGOT_PASSWORD_INTENT_PREFIX+scimUser.getId();
-        expiringCodeStore.expireByIntent(intent);
-        ExpiringCode code = expiringCodeStore.generateCode(JsonUtils.writeValueAsString(change), new Timestamp(System.currentTimeMillis() + PASSWORD_RESET_LIFETIME), intent);
+        ExpiringCode code = expiringCodeStore.generateCode(JsonUtils.writeValueAsString(change), new Timestamp(System.currentTimeMillis() + PASSWORD_RESET_LIFETIME), null);
         publish(new ResetPasswordRequestEvent(email, code.getCode(), SecurityContextHolder.getContext().getAuthentication()));
         return new ForgotPasswordInfo(scimUser.getId(), code);
     }
@@ -181,4 +177,10 @@ public class UaaResetPasswordService implements ResetPasswordService, Applicatio
             publisher.publishEvent(event);
         }
     }
+
+    @Override
+    public PasswordPolicy getPasswordPolicy() {
+        return passwordValidator.getPasswordPolicy();
+    }
+
 }
