@@ -112,12 +112,12 @@ function validatePassword(specialCount, uppercaseCount, lowercaseCount,
 
     // enableSubmitButton enables the submit button.
     function enableSubmitButton() {
-        $("input[type='submit'][name='" + submitButton + "']").attr('disabled' , false);
+        $("input[type='submit']").attr('disabled' , false);
     }
 
     // disableSubmitButton disables the submit button.
     function disableSubmitButton() {
-        $("input[type='submit'][name='" + submitButton + "']").attr('disabled' , true);
+        $("input[type='submit']").attr('disabled' , true);
     }
 
     // checkPasswords is a wrapper function.
