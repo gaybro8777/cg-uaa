@@ -50,6 +50,7 @@ public class LoginInfoEndpointIntegrationTests {
 
     }
 
+
     /**
      * tests a happy-day flow of the <code>/login</code> endpoint
      */
@@ -63,7 +64,7 @@ public class LoginInfoEndpointIntegrationTests {
         String body = response.getBody();
         // System.err.println(body);
         assertNotNull(body);
-        assertTrue("Wrong body: " + body, body.contains("<form method=\"post\" novalidate=\"novalidate\" accept-charset=\"UTF-8\" action=\"/uaa/login.do\">"));
+        assertTrue("Wrong body: " + body, body.contains("<form method=\"post\" novalidate=\"novalidate\" class=\"card signin--direct\" action=\"/uaa/login.do\">"));
 
     }
 
